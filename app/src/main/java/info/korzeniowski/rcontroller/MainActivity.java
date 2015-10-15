@@ -10,9 +10,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -20,12 +21,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,6 +33,8 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
+    private static final int DO_UPDATE_TEXT = 101;
 
     @Bind(R.id.toolbar)
     Toolbar toolbar;
@@ -42,8 +44,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     FloatingActionButton fab1;
     @Bind(R.id.text)
     TextView text;
-    @Bind(R.id.slider)
-    SeekBar slider;
+    @Bind(R.id.turn)
+    SeekBar turnSlider;
+    @Bind(R.id.power)
+    SeekBar powerSlider;
 
     private SensorManager mSensorManager;
 
@@ -53,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private BluetoothSocket mmSocket;
     private OutputStream mmOutputStream;
     private InputStream mmInputStream;
+    private Handler mHandler;
+    private Runnable sendData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +88,44 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        mHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case DO_UPDATE_TEXT:
+                        text.setText(msg.getData().getString("MSG"));
+                        return;
+                }
+                super.handleMessage(msg);
+            }
+        };
+
+        sendData = new Runnable() {
+            public void run() {
+                sendDataViaBluetooth();
+                mHandler.postDelayed(sendData, 100); // 1 second
+            }
+        };
+    }
+
+    private void sendDataViaBluetooth() {
+        final String msg = getBluetoothMsg(turnSlider.getProgress(), powerSlider.getProgress());
+
+        Message message = Message.obtain(mHandler, DO_UPDATE_TEXT);
+        Bundle bundle = new Bundle();
+        bundle.putString("MSG", msg);
+        message.setData(bundle);
+
+        mHandler.sendMessage(message);
+
+        if (mmOutputStream != null) {
+            try {
+                mmOutputStream.write(msg.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -116,65 +160,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
 
-        slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                try {
-                    String msg = getBluetoothMsg(progress);
-                    text.setText(msg);
-                    mmOutputStream.write(msg.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
+        mHandler.post(sendData);
     }
 
     @NonNull
-    private String getBluetoothMsg(int progress) {
+    private String getBluetoothMsg(int turn, int power) {
         StringBuilder sb = new StringBuilder("^");
-        if (progress < 50) {
-            sb.append(2).append(" ").append((50 - progress) * 2);
-        } else if (progress <= 100) {
-            sb.append(1).append(" ").append((progress - 50) * 2);
+        if (turn < 50) {
+            sb.append(2).append(" ").append((50 - turn) * 2);
+        } else if (turn <= 100) {
+            sb.append(1).append(" ").append((turn - 50) * 2);
         }
 
-        sb.append("|").append(50).append("$");
+        sb.append("|").append(power).append("$");
         return sb.toString();
     }
 
     @Override
     protected void onPause() {
         mSensorManager.unregisterListener(this);
+        mHandler.removeCallbacks(sendData);
         super.onPause();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
