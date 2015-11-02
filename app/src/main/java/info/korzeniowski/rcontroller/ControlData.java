@@ -5,12 +5,14 @@ public class ControlData {
     private int speed;
     private Side side;
     private int angle;
+    private int servoFix;
 
-    public ControlData(Direction direction, int speed, Side side, int angle) {
+    public ControlData(Direction direction, int speed, Side side, int angle, int servoFix) {
         this.direction = direction;
         this.speed = speed;
         this.side = side;
         this.angle = angle;
+        this.servoFix = servoFix;
     }
 
     public Direction getDirection() {
@@ -29,9 +31,13 @@ public class ControlData {
         return angle;
     }
 
+    public int getServoFix() {
+        return servoFix;
+    }
+
     @Override
     public String toString() {
-        return direction + " " + speed + " | " + side + " " + angle;
+        return direction + " " + speed + " | " + side + " " + angle + " " + servoFix;
     }
 
     public enum Side {

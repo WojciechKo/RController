@@ -2,7 +2,6 @@ package info.korzeniowski.rcontroller.controller;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,8 +13,9 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import info.korzeniowski.rcontroller.ControlData;
 import info.korzeniowski.rcontroller.R;
+import info.korzeniowski.rcontroller.utils.Prefs;
 
-public class ManualController extends Fragment {
+public class ManualCarController extends CarController {
 
     @Bind(R.id.text)
     TextView text;
@@ -29,15 +29,25 @@ public class ManualController extends Fragment {
     @Bind(R.id.direction)
     Switch directionSwitch;
 
+    private Prefs pref;
+
+    public static ManualCarController instance(Bundle arguments) {
+        ManualCarController newInstance = new ManualCarController();
+        newInstance.setArguments(arguments);
+        return newInstance;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.manual_controller, container, false);
         ButterKnife.bind(this, view);
+        pref = new Prefs(getActivity());
+
         return view;
     }
 
-    public ControlData getControllData() {
+    public ControlData getControlData() {
         ControlData.Direction direction = directionSwitch.isChecked()
                 ? ControlData.Direction.FORWARD
                 : ControlData.Direction.BACKWARD;
@@ -54,8 +64,14 @@ public class ManualController extends Fragment {
             angle = turnSlider.getProgress() - 50;
         }
 
-        ControlData controlData = new ControlData(direction, speed, side, angle * 2);
+        ControlData controlData = new ControlData(direction, speed, side, angle * 2, pref.getServoFix());
         text.setText(controlData.toString());
         return controlData;
+    }
+
+    public void stop() {
+        directionSwitch.setChecked(true);
+        speedSlider.setProgress(0);
+        turnSlider.setProgress(50);
     }
 }
