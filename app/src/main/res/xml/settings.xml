@@ -1,0 +1,29 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Servo fix">
+
+        <info.korzeniowski.rcontroller.view.NumberPickerPreference
+            android:dialogLayout="@layout/number_picker_dialog"
+            android:key="@string/servo_fix_pref"
+            android:title="Servo fix value" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Check">
+
+        <CheckBoxPreference
+            android:key="parent_checkbox_preference"
+            android:summary="summary check title 22"
+            android:title="check title 22" />
+
+        <!-- The visual style of a child is defined by this styled theme attribute. -->
+        <CheckBoxPreference
+            android:dependency="parent_checkbox_preference"
+            android:key="child_checkbox_preference"
+            android:layout="?android:attr/preferenceLayoutChild"
+            android:summary="summary checkboxpref 5555"
+            android:title="title checkboxpref 5555" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

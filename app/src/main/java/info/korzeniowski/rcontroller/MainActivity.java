@@ -1,28 +1,36 @@
 package info.korzeniowski.rcontroller;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import info.korzeniowski.rcontroller.communicator.BluetoothCommunicator;
-import info.korzeniowski.rcontroller.controller.ManualController;
+import info.korzeniowski.rcontroller.communicator.CarCommunicator;
+import info.korzeniowski.rcontroller.communicator.CarCommunicatorFactory;
+import info.korzeniowski.rcontroller.controller.CarController;
+import info.korzeniowski.rcontroller.controller.CarControllerFactory;
 
 public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.toolbar)
     Toolbar toolbar;
 
-    @Bind(R.id.fab)
-    FloatingActionButton fab;
+    private CarCommunicator carCommunicator;
+    private CarController carController;
 
-    private BluetoothCommunicator bluetoothCommunicator;
-    private ManualController manualController;
-    private Runnable sendData;
-    private Handler handler;
+    private Handler handler = new Handler();
+    private Runnable sendData = new Runnable() {
+        public void run() {
+            carCommunicator.write(carController.getControlData());
+            handler.postDelayed(sendData, 100); // 1 second
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,35 +40,51 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
-        bluetoothCommunicator = BluetoothCommunicator.instance();
-
-        manualController = new ManualController();
-        manualController.setArguments(getIntent().getExtras());
+        carCommunicator = CarCommunicatorFactory.getCommunicator();
+        carController = CarControllerFactory.getController(getIntent().getExtras());
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(bluetoothCommunicator, BluetoothCommunicator.TAG)
-                .add(R.id.controller, manualController)
+                .add(carCommunicator, CarCommunicator.TAG)
+                .add(R.id.controller, carController)
                 .commit();
-
-        handler = new Handler();
-        sendData = new Runnable() {
-            public void run() {
-                bluetoothCommunicator.send(manualController.getControllData());
-                handler.postDelayed(sendData, 100); // 1 second
-            }
-        };
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        handler.post(sendData);
+        carCommunicator.setOnConnected(new CarCommunicator.OnConnected() {
+            @Override
+            public void apply() {
+                handler.post(sendData);
+            }
+        });
+        carCommunicator.connect();
     }
 
     @Override
     protected void onPause() {
         handler.removeCallbacks(sendData);
+        carCommunicator.disconnect();
         super.onPause();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                carController.stop();
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">RController</string>
     <string name="action_settings">Settings</string>
+
+    <string name="servo_fix_pref">servo_fix</string>
+    <string name="bluetooth_device_pref">bluetooth_device</string>
 </resources>
