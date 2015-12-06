@@ -16,7 +16,7 @@ const int SIDE_LEFT = 2;
 
 int side = SIDE_RIGHT;
 int angle = 0;
-int servoFix = 50;
+int servoFix = 14;
 
 const int DIRECTION_FORWARD = 1;
 const int DIRECTION_BACKWARD = 2;
@@ -137,14 +137,14 @@ void setEnginePower(int direction, int speed) {
 
 // Returns [0 - 180]
 int getServoPwm(int side, int angle, int servoFix) {
-  angle *= 0.9;
+  angle *= 0.25;
   int result = 90;
   switch (side) {
     case SIDE_RIGHT:
-      result -= angle;
+      result += angle;
       break;
     case SIDE_LEFT:
-      result += angle;
+      result -= angle;
       break;
   }
   result += servoFix;
