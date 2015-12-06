@@ -37,10 +37,13 @@ char END_CMD_CHAR = '$';
 char SEP_CMD_CHAR = '|';
 
 void setup() {
+  pinMode(engineForwardPin, OUTPUT);
+  pinMode(engineBackwardPin, OUTPUT);
+
   Serial.begin(9600);
   bluetooth.begin(9600);
   servo.attach(servoPin);
-  
+
   digitalWrite(engineForwardPin, HIGH);
   digitalWrite(engineBackwardPin, LOW);
   analogWrite(servoPin, getServoPwm(side, angle, servoFix));
