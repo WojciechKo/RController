@@ -3,7 +3,6 @@
     package="info.korzeniowski.rcontroller">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
-
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <application
@@ -12,29 +11,27 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|keyboardHidden"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="landscape"
-            android:configChanges="orientation|keyboardHidden">
+            android:theme="@style/AppTheme.NoActionBar">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
             android:name=".SettingsActivity"
+            android:configChanges="orientation|keyboardHidden"
             android:label="Settings"
-            android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="landscape"
-            android:configChanges="orientation|keyboardHidden">
-
-
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
-
     </application>
 
 </manifest>
