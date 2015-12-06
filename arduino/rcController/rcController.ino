@@ -16,7 +16,6 @@ const int SIDE_LEFT = 2;
 
 int side = SIDE_RIGHT;
 int angle = 0;
-
 int servoFix = 50;
 
 const int DIRECTION_FORWARD = 1;
@@ -25,9 +24,7 @@ const int DIRECTION_BACKWARD = 2;
 int direction = DIRECTION_FORWARD;
 int speed = 0;
 
-int enginePwm = 0;
-int servoPwm = 90;
-const int MIN_ENGINE_PWM = 0;
+const int MIN_ENGINE_SPEED = 80;
 
 // cmd:
 // ^ [1|2] [0-100] | [1|2] [0-100] [0-100]$
@@ -39,15 +36,16 @@ char SEP_CMD_CHAR = '|';
 void setup() {
   pinMode(engineForwardPin, OUTPUT);
   pinMode(engineBackwardPin, OUTPUT);
+  pinMode(enginePowerPin, OUTPUT);
+  pinMode(servoPin, OUTPUT);
 
   Serial.begin(9600);
   bluetooth.begin(9600);
   servo.attach(servoPin);
 
-  digitalWrite(engineForwardPin, HIGH);
-  digitalWrite(engineBackwardPin, LOW);
-  analogWrite(servoPin, getServoPwm(side, angle, servoFix));
-  analogWrite(enginePowerPin, getEnginePwm(direction, speed));
+  setServo(side, angle);
+  setDirectionPins(direction);
+  setEnginePower(direction, speed);
 }
 
 void loop() {
@@ -86,47 +84,55 @@ void loop() {
   Serial.print(servoFix);
   Serial.println(END_CMD_CHAR);
 
-  // Handle servo data
-  int newServoPwm = getServoPwm(newSide, newAngle, servoFix);
-  if (servoPwm != newServoPwm) {
-    servoPwm = newServoPwm;
-    servo.write(servoPwm);
+  // Side or angle has changed
+  if (side != newSide || angle != newAngle) {
+    setServo(newSide, newAngle);
+
+    side = newSide;
+    angle = newAngle;
     Serial.println("Servo moved");
   }
-  
-  // Handle engine data
+
+   // Direction has changed
   if (direction != newDirection) {
-    // slow down
-    for (int i = speed ; i >= MIN_ENGINE_PWM ; i--) {
+    // Slow down
+    for (int speedIterator = speed ; speedIterator >= MIN_ENGINE_SPEED ; setEnginePower(direction, --speedIterator)) {
       delay(10);
-      enginePwm = getEnginePwm(direction, i);
-      analogWrite(enginePowerPin, enginePwm);
     }
 
-    // set direction
-    digitalWrite(engineForwardPin, newDirection == DIRECTION_FORWARD ? HIGH : LOW);
-    digitalWrite(engineBackwardPin, newDirection == DIRECTION_BACKWARD ? HIGH : LOW);
+    // Change direction
+    setDirectionPins(newDirection);
+    
+    // Speed up
+    for (int speedIterator = MIN_ENGINE_SPEED ; speedIterator <= newSpeed ; setEnginePower(newDirection, speedIterator++)) {
+      delay(10);
+    }
+
+    speed = newSpeed;
     direction = newDirection;
-    
-    // speed up
-    for (int i = MIN_ENGINE_PWM ; i <= newSpeed ; i++) {
-      delay(10);
-      enginePwm = getEnginePwm(newDirection, i);
-      analogWrite(enginePowerPin, enginePwm);
-    }
-    speed = newSpeed;
-    
     Serial.println("Direction changed");
-  }
 
-  // Changed speed only
-  if (speed != newSpeed) {
+  // Only speed has changed
+  } else if (speed != newSpeed) {
+    setEnginePower(direction, newSpeed);
+
     speed = newSpeed;
-    enginePwm = getEnginePwm(direction, speed);
-    analogWrite(enginePowerPin, enginePwm);
-    Serial.print("Speed changed: ");
-    Serial.println(enginePwm);
+    Serial.print("Speed changed");
   }
+}
+
+void setServo(int side, int angle) {
+  int servoPwm = getServoPwm(side, angle, servoFix);
+  servo.write(servoPwm);
+}
+
+void setDirectionPins(int direction) {
+    digitalWrite(engineForwardPin, direction == DIRECTION_FORWARD ? HIGH : LOW);
+    digitalWrite(engineBackwardPin, direction == DIRECTION_BACKWARD ? HIGH : LOW);
+}
+
+void setEnginePower(int direction, int speed) {
+    analogWrite(enginePowerPin, getEnginePwm(speed >= MIN_ENGINE_SPEED ? speed : 0));
 }
 
 // Returns [0 - 180]
@@ -146,7 +152,7 @@ int getServoPwm(int side, int angle, int servoFix) {
 }
 
 // Returns [0 - 255]
-int getEnginePwm(int direction, int speed) {
+int getEnginePwm(int speed) {
   return speed * 2.55;
 }
 
