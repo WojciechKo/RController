@@ -58,7 +58,7 @@ public class SettingsActivity extends FragmentActivity {
                         carCommunicator.write(controlData);
                     }
                 });
-//                ((NumberPickerPreference) preference).setDialogLayoutResource(R.layout.number_picker_dialog);
+
                 fragment.setTargetFragment(SettingsFragment.this, 0);
                 fragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
             } else {

@@ -1,6 +1,7 @@
 package info.korzeniowski.rcontroller.view;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.Preference;
@@ -34,6 +35,7 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
             }
         }
     };
+    private int clickedButton;
 
     public static NumberPickerPreferenceDialogFragment newInstance(Preference preference) {
         NumberPickerPreferenceDialogFragment fragment = new NumberPickerPreferenceDialogFragment();
@@ -46,31 +48,12 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
     @Override
     protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
         super.onPrepareDialogBuilder(builder);
-
-//
-//        getNumberPickerPreference();
-//
-//
-//        mClickedDialogEntryIndex = preference.findIndexOfValue(preference.getValue());
-//        builder.setSingleChoiceItems(preference.getEntries(), mClickedDialogEntryIndex,
-//                new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        mClickedDialogEntryIndex = which;
-//                        /*
-//                         * Clicking on an item simulates the positive button
-//                         * click, and dismisses the dialog.
-//                         */
-//                        ListPreferenceDialogFragmentCompat.this.onClick(dialog,
-//                                DialogInterface.BUTTON_POSITIVE);
-//                        dialog.dismiss();
-//                    }
-//                });
-        /*
-         * The typical interaction for list-based dialogs is to have
-         * click-on-an-item dismiss the dialog instead of the user having to
-         * press 'Ok'.
-         */
-        builder.setPositiveButton(null, null);
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                clickedButton = which;
+            }
+        });
     }
 
     @Override
@@ -90,7 +73,7 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
         numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                onValueChangedListener.onValueChange(picker, oldVal - MIN_VALUE, newVal - MIN_VALUE);
+                onValueChangedListener.onValueChange(picker, oldVal + MIN_VALUE, newVal + MIN_VALUE);
             }
         });
         numberPicker.setMinValue(0);
@@ -134,8 +117,8 @@ public class NumberPickerPreferenceDialogFragment extends PreferenceDialogFragme
 
     @Override
     public void onDialogClosed(boolean positiveResult) {
-        if (positiveResult) {
-            int value = numberPicker.getValue();
+        if (clickedButton == DialogInterface.BUTTON_POSITIVE) {
+            int value = numberPicker.getValue() + MIN_VALUE;
             if (getNumberPickerPreference().callChangeListener(value)) {
                 getNumberPickerPreference().setValue(value);
             }

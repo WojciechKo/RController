@@ -22,7 +22,8 @@ public class NumberPickerPreference extends DialogPreference {
     public void setValue(int value) {
         this.value = value;
         persistInt(value);
-//        setSummary(NumberPickerPreferenceDialogFragment.FORMATTER.format(value));
+        int valueIndex = value - NumberPickerPreferenceDialogFragment.MIN_VALUE;
+        setSummary(NumberPickerPreferenceDialogFragment.FORMATTER.format(valueIndex));
     }
 
     public int getValue() {
