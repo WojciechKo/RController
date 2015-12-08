@@ -32,8 +32,14 @@ public class SettingsActivity extends FragmentActivity {
         @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
-            carCommunicator = (CarCommunicator) getActivity().getSupportFragmentManager().findFragmentByTag(CarCommunicator.TAG);
-            carCommunicator.connect();
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            if (carCommunicator != null) {
+                carCommunicator.disconnect();
+            }
         }
 
         @Override
@@ -61,6 +67,9 @@ public class SettingsActivity extends FragmentActivity {
 
                 fragment.setTargetFragment(SettingsFragment.this, 0);
                 fragment.show(getFragmentManager(), DIALOG_FRAGMENT_TAG);
+
+                carCommunicator = (CarCommunicator) getActivity().getSupportFragmentManager().findFragmentByTag(CarCommunicator.TAG);
+                carCommunicator.connect();
             } else {
                 super.onDisplayPreferenceDialog(preference);
             }

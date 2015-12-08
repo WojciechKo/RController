@@ -11,6 +11,7 @@ import android.view.MenuItem;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import info.korzeniowski.rcontroller.communicator.CarCommunicator;
 import info.korzeniowski.rcontroller.communicator.CarCommunicatorFactory;
 import info.korzeniowski.rcontroller.controller.CarController;
@@ -31,6 +32,11 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(sendData, 100); // 1 second
         }
     };
+
+    @OnClick(R.id.fab)
+    public void fabClicked() {
+        carCommunicator.connect();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
                 handler.post(sendData);
             }
         });
-        carCommunicator.connect();
     }
 
     @Override
