@@ -27,7 +27,7 @@ int speed = 0;
 const int MIN_ENGINE_SPEED = 80;
 
 // cmd:
-// ^ [1|2] [0-100] | [1|2] [0-100] [0-100]$
+// ^ [1|2] [0-100] | [1|2] [0-100] [-50 - 50]$
 // ^direction speed | side   angle  servo-fix$
 char START_CMD_CHAR = '^';
 char END_CMD_CHAR = '$';
@@ -43,7 +43,7 @@ void setup() {
   bluetooth.begin(9600);
   servo.attach(servoPin);
 
-  setServo(side, angle);
+  setServo(side, angle, servoFix);
   setDirectionPins(direction);
   setEnginePower(direction, speed);
 }
@@ -62,7 +62,7 @@ void loop() {
 
   int newSide = bluetooth.parseInt();
   int newAngle = bluetooth.parseInt();
-  int servoFix = bluetooth.parseInt();
+  int newServoFix = bluetooth.parseInt();
   if (bluetooth.read() != END_CMD_CHAR) return;
 
   // Validation
@@ -81,15 +81,16 @@ void loop() {
   Serial.print(" ");
   Serial.print(newAngle);
   Serial.print(" ");
-  Serial.print(servoFix);
+  Serial.print(newServoFix);
   Serial.println(END_CMD_CHAR);
 
   // Side or angle has changed
-  if (side != newSide || angle != newAngle) {
-    setServo(newSide, newAngle);
+  if (side != newSide || angle != newAngle || servoFix != newServoFix) {
+    setServo(newSide, newAngle, newServoFix);
 
     side = newSide;
     angle = newAngle;
+    servoFix = newServoFix;
     Serial.println("Servo moved");
   }
 
@@ -121,7 +122,7 @@ void loop() {
   }
 }
 
-void setServo(int side, int angle) {
+void setServo(int side, int angle, int servoFix) {
   int servoPwm = getServoPwm(side, angle, servoFix);
   servo.write(servoPwm);
 }
