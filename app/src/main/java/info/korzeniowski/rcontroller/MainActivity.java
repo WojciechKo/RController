@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Runnable sendData = new Runnable() {
         public void run() {
             carCommunicator.write(carController.getControlData());
-            handler.postDelayed(sendData, 100); // 1 second
+            handler.postDelayed(sendData, 100); // 0.1 second
         }
     };
 

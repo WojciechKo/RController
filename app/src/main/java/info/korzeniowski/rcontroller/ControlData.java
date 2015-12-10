@@ -1,34 +1,30 @@
 package info.korzeniowski.rcontroller;
 
 public class ControlData {
-    private Direction direction;
-    private int speed;
-    private Side side;
-    private int angle;
     private int servoFix;
+    private SteeringWheel steeringWheel;
+    private Engine engine;
 
-    public ControlData(Direction direction, int speed, Side side, int angle, int servoFix) {
-        this.direction = direction;
-        this.speed = speed;
-        this.side = side;
-        this.angle = angle;
+    public ControlData(Engine engine, SteeringWheel steeringWheel, int servoFix) {
+        this.engine = engine;
+        this.steeringWheel = steeringWheel;
         this.servoFix = servoFix;
     }
 
     public Direction getDirection() {
-        return direction;
+        return engine.direction;
     }
 
     public int getSpeed() {
-        return speed;
+        return engine.speed;
     }
 
     public Side getSide() {
-        return side;
+        return steeringWheel.side;
     }
 
     public int getAngle() {
-        return angle;
+        return steeringWheel.angle;
     }
 
     public int getServoFix() {
@@ -37,7 +33,7 @@ public class ControlData {
 
     @Override
     public String toString() {
-        return direction + " " + speed + " | " + side + " " + angle + " " + servoFix;
+        return getDirection() + " " + getSpeed() + " | " + getSide() + " " + getAngle() + " " + servoFix;
     }
 
     public enum Side {
@@ -65,6 +61,26 @@ public class ControlData {
 
         public int getValue() {
             return value;
+        }
+    }
+
+    public static class Engine {
+        public final Direction direction;
+        public final int speed;
+
+        public Engine(Direction direction, int speed) {
+            this.direction = direction;
+            this.speed = speed;
+        }
+    }
+
+    public static class SteeringWheel {
+        public final Side side;
+        public final int angle;
+
+        public SteeringWheel(Side side, int angle) {
+            this.side = side;
+            this.angle = angle;
         }
     }
 }

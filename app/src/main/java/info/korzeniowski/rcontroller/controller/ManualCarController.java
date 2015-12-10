@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -43,35 +44,63 @@ public class ManualCarController extends CarController {
         View view = inflater.inflate(R.layout.manual_controller, container, false);
         ButterKnife.bind(this, view);
         pref = new Prefs(getActivity());
-
+        speedSlider.setOnSeekBarChangeListener(new UpdateTextOnSeekBarChange());
+        turnSlider.setOnSeekBarChangeListener(new UpdateTextOnSeekBarChange());
+        directionSwitch.setOnCheckedChangeListener(new UpdateTextOnSwitch());
         return view;
     }
 
     public ControlData getControlData() {
+        return new ControlData(getEngine(), getSteeringWheel(), pref.getServoFix());
+    }
+
+    private ControlData.Engine getEngine() {
         ControlData.Direction direction = directionSwitch.isChecked()
                 ? ControlData.Direction.FORWARD
                 : ControlData.Direction.BACKWARD;
 
-        int speed = speedSlider.getProgress();
+        return new ControlData.Engine(direction, speedSlider.getProgress());
+    }
 
-        ControlData.Side side;
-        int angle;
-        if (turnSlider.getProgress() < 50) {
-            side = ControlData.Side.LEFT;
-            angle = 50 - turnSlider.getProgress();
+    private ControlData.SteeringWheel getSteeringWheel() {
+        if (turnSlider.getProgress() < turnSlider.getMax() / 2) {
+            return new ControlData.SteeringWheel(
+                    ControlData.Side.LEFT,
+                    turnSlider.getMax() / 2 - turnSlider.getProgress());
         } else {
-            side = ControlData.Side.RIGHT;
-            angle = turnSlider.getProgress() - 50;
+            return new ControlData.SteeringWheel(
+                    ControlData.Side.RIGHT,
+                    turnSlider.getProgress() - turnSlider.getMax() / 2);
         }
-
-        ControlData controlData = new ControlData(direction, speed, side, angle * 2, pref.getServoFix());
-        text.setText(controlData.toString());
-        return controlData;
     }
 
     public void stop() {
         directionSwitch.setChecked(true);
         speedSlider.setProgress(0);
-        turnSlider.setProgress(50);
+        turnSlider.setProgress(turnSlider.getMax() / 2);
+    }
+
+    class UpdateTextOnSeekBarChange implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            text.setText(getControlData().toString());
+        }
+    }
+
+    class UpdateTextOnSwitch implements CompoundButton.OnCheckedChangeListener {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            text.setText(getControlData().toString());
+        }
     }
 }

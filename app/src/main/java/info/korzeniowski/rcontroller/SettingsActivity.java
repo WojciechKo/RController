@@ -56,10 +56,8 @@ public class SettingsActivity extends FragmentActivity {
                     @Override
                     public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                         ControlData controlData = new ControlData(
-                                ControlData.Direction.FORWARD,
-                                0,
-                                ControlData.Side.RIGHT,
-                                0,
+                                new ControlData.Engine(ControlData.Direction.FORWARD, 0),
+                                new ControlData.SteeringWheel(ControlData.Side.RIGHT, 0),
                                 newVal);
                         carCommunicator.write(controlData);
                     }
