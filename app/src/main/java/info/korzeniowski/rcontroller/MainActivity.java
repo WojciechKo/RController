@@ -8,6 +8,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -21,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.toolbar)
     Toolbar toolbar;
+
+    @Bind(R.id.controller_spinner)
+    Spinner controllerSpinner;
 
     private CarCommunicator carCommunicator;
     private CarController carController;
@@ -46,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(toolbar);
 
+        controllerSpinner.setAdapter(getControllerSpinnerAdapter());
+        controllerSpinner.setOnItemSelectedListener(getControllerSpinnerListener());
+
         carCommunicator = CarCommunicatorFactory.getCommunicator();
         carController = CarControllerFactory.getController(getIntent().getExtras());
 
@@ -54,6 +64,38 @@ public class MainActivity extends AppCompatActivity {
                 .add(carCommunicator, CarCommunicator.TAG)
                 .add(R.id.controller, carController)
                 .commit();
+    }
+
+    private ArrayAdapter<CarControllerFactory.Type> getControllerSpinnerAdapter() {
+        ArrayAdapter<CarControllerFactory.Type> controllerSpinnerAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                CarControllerFactory.Type.values());
+        controllerSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        return controllerSpinnerAdapter;
+    }
+
+    private AdapterView.OnItemSelectedListener getControllerSpinnerListener() {
+        return new AdapterView.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                CarControllerFactory.Type selectedType = (CarControllerFactory.Type) parent.getItemAtPosition(position);
+                CarController controllerFragment =
+                        CarControllerFactory.getController(getIntent().getExtras(), selectedType);
+
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.controller, controllerFragment)
+                        .commit();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        };
     }
 
     @Override
